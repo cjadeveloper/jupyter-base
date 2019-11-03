@@ -1,6 +1,6 @@
 # Jupyter Docker Base Stack with compatibility for SQL Server
 
-This image provides an abstract Jupyter Docker Stack base for Python developers with SQL Server compatibility on Linux.
+This is an abstract base image of Jupyter Docker Stack for Python developers with support for SQL Server on Linux.
 
 ## Dockerfile
 
