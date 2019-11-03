@@ -54,7 +54,6 @@ RUN apt-get update && ACCEPT_EULA=Y apt-get install -y mssql-tools
 RUN echo 'export PATH="$PATH:/opt/mssql-tools/bin"' >> ~/.bashrc
 RUN /bin/bash -c "source ~/.bashrc"
 
-#RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
 RUN echo "es_AR.UTF-8 UTF-8" > /etc/locale.gen \
 && locale-gen
 
