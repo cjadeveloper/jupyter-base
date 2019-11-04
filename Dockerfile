@@ -94,3 +94,68 @@ WORKDIR $HOME
 # Setup work directory for backward-compatibility
 RUN mkdir /home/$NB_USER/work \
 && fix-permissions.sh /home/$NB_USER
+
+# Install conda as jovyan and check the md5 sum provided on the download site
+ENV MINICONDA_VERSION=4.6.14 \
+    CONDA_VERSION=4.7.10
+
+RUN cd /tmp \
+&& wget --quiet https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh \
+&& echo "718259965f234088d785cad1fbd7de03 *Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - \
+&& /bin/bash Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR \
+&& rm Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh \
+&& echo "conda ${CONDA_VERSION}" >> $CONDA_DIR/conda-meta/pinned \
+&& $CONDA_DIR/bin/conda config --system --prepend channels conda-forge \
+&& $CONDA_DIR/bin/conda config --system --set auto_update_conda false \
+&& $CONDA_DIR/bin/conda config --system --set show_channel_urls true \
+&& $CONDA_DIR/bin/conda install --quiet --yes conda \
+&& $CONDA_DIR/bin/conda update --all --quiet --yes \
+&& conda list python | grep '^python ' | tr -s ' ' | cut -d '.' -f 1,2 | sed 's/$/.*/' >> $CONDA_DIR/conda-meta/pinned \
+&& conda clean --all -f -y \
+&& rm -rf /home/$NB_USER/.cache/yarn \
+&& fix-permissions.sh $CONDA_DIR \
+&& fix-permissions.sh /home/$NB_USER
+
+# Install Tini
+RUN conda install --quiet --yes 'tini=0.18.0' \
+&& conda list tini | grep tini | tr -s ' ' | cut -d ' ' -f 1,2 >> $CONDA_DIR/conda-meta/pinned \
+&& conda clean --all -f -y \
+&& fix-permissions.sh $CONDA_DIR \
+&& fix-permissions.sh /home/$NB_USER
+
+# Install Jupyter Notebook, Lab, and Hub
+# Generate a notebook server config
+# Cleanup temporary files
+# Correct permissions
+# Do all this in a single RUN command to avoid duplicating all of the
+# files across image layers when the permissions change
+RUN conda install --quiet --yes \
+ 'notebook=6.0.0' \
+ 'jupyterhub=1.0.0' \
+ 'jupyterlab=1.1.3' \
+&& conda clean --all -f -y \
+&& npm cache clean --force \
+&& jupyter notebook --generate-config \
+&& rm -rf $CONDA_DIR/share/jupyter/lab/staging \
+&& rm -rf /home/$NB_USER/.cache/yarn \
+&& fix-permissions.sh $CONDA_DIR \
+&& fix-permissions.sh /home/$NB_USER
+
+EXPOSE 8888
+
+# Configure container startup
+ENTRYPOINT ["tini", "-g", "--"]
+CMD ["start-notebook.sh"]
+
+# Add local files as late as possible to avoid cache busting
+COPY start.sh /usr/local/bin/
+COPY start-notebook.sh /usr/local/bin/
+COPY start-singleuser.sh /usr/local/bin/
+COPY jupyter_notebook_config.py /etc/jupyter/
+
+# Fix permissions on /etc/jupyter as root
+USER root
+RUN fix-permissions.sh /etc/jupyter/
+
+# Switch back to johndoe to avoid accidental container runs as root
+USER $NB_UID
