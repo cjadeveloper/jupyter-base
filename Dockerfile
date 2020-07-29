@@ -95,7 +95,7 @@ WORKDIR $HOME
 RUN mkdir /home/$NB_USER/work \
 && fix-permissions.sh /home/$NB_USER
 
-# Install conda as jovyan and check the md5 sum provided on the download site
+# Install conda as johndoe and check the md5 sum provided on the download site
 ENV MINICONDA_VERSION=4.6.14 \
     CONDA_VERSION=4.7.10
 
