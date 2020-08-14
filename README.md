@@ -6,6 +6,6 @@ This image provides a Jupyter Docker Stack base for Python developers with SQL S
 
 The following components are included:
 
-- Ubuntu 18.04 OS layer.
-- Install all OS dependencies for notebook server.
-- Modifications to the [Base Jupyter Docker Stack](https://github.com/jupyter/docker-stacks/tree/master/base-notebook) for compatibility with the SQL Server driver for Linux
+* Ubuntu 20.04 OS layer.
+* Install all OS dependencies for notebook server.
+* Modifications to the [Base Jupyter Docker Stack](https://github.com/jupyter/docker-stacks/tree/master/base-notebook) for compatibility with the SQL Server driver for Linux
